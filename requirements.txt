@@ -1,4 +1,4 @@
-cupy-cuda110==13.3.0
+cupy-cuda124==13.3.0
 dvc==3.59.1
 dvc-data==3.16.9
 dvc-http==2.32.0

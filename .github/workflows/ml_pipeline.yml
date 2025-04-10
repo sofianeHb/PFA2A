@@ -1,79 +1,83 @@
 name: ML Pipeline
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  ml-pipeline:
+  ml_pipeline:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🧾 Cloner le dépôt
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: 🐍 Installer Python 3.9.20
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9.20'
+    - name: Set up Python 3.9.20
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9.20'
 
-      - name: 📦 Installer les dépendances
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install dvc[s3]  # ou [azure], [gdrive], selon ton remote
+    - name: Install DVC and dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install dvc[gs]  # adapte selon ton remote (gs, s3, azure, etc.)
 
-      - name: 🧹 Prétraitement des données
-        run: |
-          python data_preprocessing.py
-          dvc add data/pneumonia_dataset.csv
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
-          git add data/pneumonia_dataset.csv.dvc
-          git diff --cached --quiet || git commit -m "Track dataset with DVC after preprocessing"
+    - name: Pull data from DVC remote (if needed)
+      run: dvc pull || echo "Pas de remote configuré pour DVC."
 
-      - name: ✂️ Split des données
-        run: |
-          python train_test_split.py
-          dvc add data/splits/train_split.csv
-          dvc add data/splits/valid_split.csv
-          dvc add data/splits/test_split.csv
-          git add data/splits/*.dvc
-          git diff --cached --quiet || git commit -m "Track data splits with DVC"
+    - name: Run data preprocessing
+      run: |
+        python data_preprocessing.py
+        dvc add data/pneumonia_dataset.csv
+        git add data/pneumonia_dataset.csv.dvc
+        git config --global user.name "github-actions"
+        git config --global user.email "action@github.com"
+        git diff --quiet || git commit -m "Track dataset with DVC after preprocessing"
 
-      - name: 🧠 Entraîner le modèle
-        run: |
-          python model_training.py
-          dvc add -f outputs/models/Enhanced_model_V2.keras
-          git add -f outputs/models/Enhanced_model_V2.keras.dvc
-          git diff --cached --quiet || git commit -m "Track trained model with DVC"
+    - name: Split data
+      run: |
+        python train_test_split.py
+        dvc add data/splits/train_split.csv
+        dvc add data/splits/valid_split.csv
+        dvc add data/splits/test_split.csv
+        git add data/splits/*.dvc
+        git diff --quiet || git commit -m "Track data splits with DVC"
 
-      - name: 📊 Évaluer le modèle
-        run: python model_evaluation.py
+    - name: Train model
+      run: |
+        python model_training.py
+        dvc add -f outputs/models/Enhanced_model_V2.keras
+        git add -f outputs/models/Enhanced_model_V2.keras.dvc
+        git diff --quiet || git commit -m "Track trained model with DVC"
 
-      - name: ✅ Valider le modèle
-        run: |
-          python -c "
-import json
-with open('outputs/results/classification_report.json') as f:
-    report = json.load(f)
-seuil = 0.9
-f1_normal = report['NORMAL']['f1-score']
-f1_pneumonia = report['PNEUMONIA']['f1-score']
-print(f'F1 NORMAL: {f1_normal}, F1 PNEUMONIA: {f1_pneumonia}')
-if f1_normal < seuil or f1_pneumonia < seuil:
-    raise SystemExit('❌ Modèle rejeté : F1-score trop bas')
-else:
-    print('✅ Modèle validé')"
+    - name: Evaluate model
+      run: python model_evaluation.py
 
-      - name: 📁 Sauvegarder les fichiers produits
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-artifacts
-          path: |
-            **/*.txt
-            **/*.png
-            **/*.h5
-            **/*.csv
-            **/*.keras
+    - name: Validate model
+      run: |
+        python -c "
+        import json
+        with open('outputs/results/classification_report.json') as f:
+            report = json.load(f)
+        f1_normal = report['NORMAL']['f1-score']
+        f1_pneumonia = report['PNEUMONIA']['f1-score']
+        print(f'F1-score NORMAL: {f1_normal}')
+        print(f'F1-score PNEUMONIA: {f1_pneumonia}')
+        if f1_normal < 0.9 or f1_pneumonia < 0.9:
+            raise ValueError('Modèle rejeté : F1-score trop bas')
+        else:
+            print('Modèle validé !')
+        "
+
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: model-artifacts
+        path: |
+          **/*.txt
+          **/*.png
+          **/*.csv
+          **/*.keras

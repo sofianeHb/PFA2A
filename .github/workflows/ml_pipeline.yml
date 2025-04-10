@@ -25,7 +25,7 @@ jobs:
         pip uninstall -y protobuf
         pip install protobuf==3.19.6 --no-cache-dir
         pip install -r requirements.txt
-        pip install dvc[gs]  # adapte selon ton remote (gs, s3, azure, etc.)
+        python -c "import google.protobuf; print('protobuf version:', google.protobuf.__version__)"
 
     - name: Pull data from DVC remote (if needed)
       run: dvc pull || echo "Pas de remote configuré pour DVC."

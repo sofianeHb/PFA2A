@@ -82,7 +82,7 @@ jobs:
       run: |
           sudo apt-get install -y tree
           echo "Arborescence du répertoire courant :"
-          tree -L 4  # Tu peux ajuster le niveau si besoin
+          tree -L 2  # Tu peux ajuster le niveau si besoin
       
     - name: Set up Ngrok and Run MLflow UI
       env:

@@ -34,24 +34,6 @@ jobs:
 
     - name: Pull data from DVC remote (if needed)
       run: dvc pull || echo "Pas de remote configuré pour DVC."
-    
-    - name: Download and install ngrok
-      run: |
-        curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-        echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-        sudo apt update && sudo apt install ngrok
-
-    - name: Start MLflow server and ngrok tunnel
-      run: |
-        nohup mlflow ui --host 0.0.0.0 --port 5000 > mlflow.log 2>&1 &
-        sleep 10  # attendre que mlflow démarre
-        nohup ngrok http 5000 > ngrok.log 2>&1 &
-        sleep 10  # attendre que ngrok démarre
-
-    - name: Display ngrok public URL
-      run: |
-        curl http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
-
 
     - name: Run data preprocessing
       run: |
@@ -96,7 +78,47 @@ jobs:
         else:
             print('Modèle validé !')
         "
+    
+    - name: Set up Ngrok and Run MLflow UI
+      env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+      run: |
+            pip install pyngrok requests
+            python -c "
+            import os
+            import time
+            import subprocess
+            from pyngrok import ngrok
 
+            # Auth Ngrok
+            ngrok.set_auth_token(os.environ['NGROK_AUTH_TOKEN'])
+
+            # Lancer le serveur MLflow via subprocess
+            mlflow_process = subprocess.Popen([
+                'mlflow', 'ui',
+                '--backend-store-uri', 'sqlite:///mlflow.db',
+                '--default-artifact-root', './mlruns',
+                '--host', '0.0.0.0',
+                '--port', '5000'
+            ])
+
+            # Attendre que le serveur démarre
+            time.sleep(10)
+            print('premier sleep termine')
+
+            # Tunnel ngrok
+            public_url = ngrok.connect(5000)
+            print('\\n' + '='*50)
+            print('🚀 MLflow UI is available at:', public_url)
+            print('='*50 + '\\n')
+            time.sleep(300)
+            
+
+            # Arrêter les processus
+            #mlflow_process.terminate()
+            #ngrok.kill()
+            "
+    
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:

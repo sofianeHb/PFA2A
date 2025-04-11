@@ -116,7 +116,7 @@ jobs:
             print('\\n' + '='*50)
             print('🚀 MLflow UI is available at:', public_url)
             print('='*50 + '\\n')
-            time.sleep(300)
+            time.sleep(150)
             
 
             # Arrêter les processus
@@ -133,3 +133,22 @@ jobs:
           **/*.png
           **/*.csv
           **/*.keras
+
+    - name: Upload MLflow logs
+      uses: actions/upload-artifact@v4
+      with:
+        name: mlruns
+        path: mlruns/
+    
+    - name: Upload Data directory
+      uses: actions/upload-artifact@v4
+      with:
+        name: data
+        path: data/
+    
+    - name: Upload Outputs directory
+      uses: actions/upload-artifact@v4
+      with:
+        name: outputs
+        path: outputs/
+    

@@ -78,7 +78,12 @@ jobs:
         else:
             print('Modèle validé !')
         "
-    
+    - name: Afficher l'arborescence du répertoire
+      run: |
+          sudo apt-get install -y tree
+          echo "Arborescence du répertoire courant :"
+          tree -L 4  # Tu peux ajuster le niveau si besoin
+      
     - name: Set up Ngrok and Run MLflow UI
       env:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}

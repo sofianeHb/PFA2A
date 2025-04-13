@@ -1,0 +1,26 @@
+name: Deploy FastAPI and MLflow
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push Docker images
+      run: |
+        docker build -t fastapi-model -f docker/fastapi.Dockerfile .
+        docker build -t mlflow-ui -f docker/mlflow.Dockerfile .
+
+    - name: Run services with Docker Compose
+      run: docker-compose -f docker/docker-compose.yml up -d

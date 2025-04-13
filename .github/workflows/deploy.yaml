@@ -1,4 +1,4 @@
-name: Deploy API and MLflow
+name: Deploy Pipeline
 
 on:
   workflow_run:
@@ -8,25 +8,37 @@ on:
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
 
-      - name: Build Docker image
-        run: docker build -t my-fastapi-mlflow .
+    - name: Build and run containers
+      run: docker-compose up -d --build
 
-      - name: Run container with Ngrok
-        env:
-          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-        run: |
-          docker run -d -e NGROK_AUTH_TOKEN=$NGROK_AUTH_TOKEN -p 8000:8000 -p 5000:5000 my-fastapi-mlflow
+    - name: Download and set up Ngrok
+      run: |
+        wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+        unzip ngrok-stable-linux-amd64.zip
+        sudo mv ngrok /usr/local/bin
+        ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
 
-      - name: Sleep to keep job alive and inspect Ngrok URLs
-        run: |
-          echo "Waiting 5 minutes so you can inspect the Ngrok URLs..."
-          sleep 100
+    - name: Start Ngrok tunnels
+      run: |
+        nohup ngrok http 8000 > ngrok_fastapi.log &
+        nohup ngrok http 5000 > ngrok_mlflow.log &
+        sleep 10
+
+    - name: Show public URLs
+      run: |
+        curl http://localhost:4040/api/tunnels > tunnels.json
+        echo "Public URLs:"
+        cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
+        sleep 100

@@ -25,3 +25,8 @@ jobs:
           NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
         run: |
           docker run -d -e NGROK_AUTH_TOKEN=$NGROK_AUTH_TOKEN -p 8000:8000 -p 5000:5000 my-fastapi-mlflow
+
+      - name: Sleep to keep job alive and inspect Ngrok URLs
+        run: |
+          echo "Waiting 5 minutes so you can inspect the Ngrok URLs..."
+          sleep 100

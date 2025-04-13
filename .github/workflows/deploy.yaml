@@ -1,4 +1,4 @@
-name: Deploy Pipeline
+name: Deploy API and MLflow
 
 on:
   workflow_run:
@@ -7,47 +7,21 @@ on:
       - completed
 
 jobs:
-  deploy_pipeline:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Install pyngrok
-      run: pip install pyngrok
+      - name: Build Docker image
+        run: docker build -t my-fastapi-mlflow .
 
-    - name: Run FastAPI (via Docker)
-      run: |
-        docker run -d -p 8000:80 \
-          -v ${{ github.workspace }}/app:/app \
-          tiangolo/uvicorn-gunicorn-fastapi:python3.9
-
-    - name: Run MLflow server (via Docker)
-      run: |
-        docker run -d -p 5000:5000 \
-          -v ${{ github.workspace }}/mlruns:/mlflow/mlruns \
-          ghcr.io/mlflow/mlflow:latest \
-          mlflow server \
-          --backend-store-uri sqlite:/mlflow/mlruns  \
-          --default-artifact-root /mlflow/mlruns \
-          --host 0.0.0.0
-
-    - name: Expose with ngrok
-      run: |
-        python -c "
-        import time
-        from pyngrok import ngrok
-
-        api_url = ngrok.connect(8000, bind_tls=True)
-        mlflow_url = ngrok.connect(5000, bind_tls=True)
-        print(f'✅ API disponible ici : {api_url.public_url}')
-        print(f'✅ MLflow disponible ici : {mlflow_url.public_url}')
-        time.sleep(200)
-        "
+      - name: Run container with Ngrok
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        run: |
+          docker run -d -e NGROK_AUTH_TOKEN=$NGROK_AUTH_TOKEN -p 8000:8000 -p 5000:5000 my-fastapi-mlflow

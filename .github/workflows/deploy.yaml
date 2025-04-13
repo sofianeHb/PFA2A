@@ -1,44 +1,53 @@
-name: Continuous Deployment
+name: Deploy Pipeline
 
 on:
   workflow_run:
-    workflows: ["ML Pipeline"]  # Nom du workflow CI
+    workflows: ["ML Pipeline"]
     types:
       - completed
 
-permissions:
-  actions: read
-  contents: read
-
 jobs:
-  deploy:
+  deploy_pipeline:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-      - name: Download model artifacts
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: ml_pipeline.yml
-          workflow_conclusion: success
-          run_id: ${{ github.event.workflow_run.id }}
-          name: model-artifacts
-          path: ./models
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          check_artifacts: true
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Setup Docker
-        uses: docker/setup-buildx-action@v3
+    - name: Install pyngrok
+      run: pip install pyngrok
 
-      - name: Build and run services with Docker Compose
-        run: docker compose -f docker/docker-compose.yml up --build -d
+    - name: Run FastAPI (via Docker)
+      run: |
+        docker run -d -p 8000:80 \
+          -v ${{ github.workspace }}/app:/app \
+          tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
-      - name: Wait for services to be ready
-        run: sleep 30
+    - name: Run MLflow server (via Docker)
+      run: |
+        docker run -d -p 5000:5000 \
+          -v ${{ github.workspace }}/mlruns:/mlflow/mlruns \
+          ghcr.io/mlflow/mlflow:latest \
+          mlflow server \
+          --backend-store-uri sqlite:///mlflow.db \
+          --default-artifact-root /mlflow/mlruns \
+          --host 0.0.0.0
 
-      - name: List running containers
-        run: docker ps
+    - name: Expose with ngrok
+      run: |
+        python -c "
+        import time
+        from pyngrok import ngrok
 
+        api_url = ngrok.connect(8000, bind_tls=True)
+        mlflow_url = ngrok.connect(5000, bind_tls=True)
+        print(f'✅ API disponible ici : {api_url.public_url}')
+        print(f'✅ MLflow disponible ici : {mlflow_url.public_url}')
+        time.sleep(200)
+        "

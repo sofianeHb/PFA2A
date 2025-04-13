@@ -116,7 +116,7 @@ jobs:
             print('\\n' + '='*50)
             print('🚀 MLflow UI is available at:', public_url)
             print('='*50 + '\\n')
-            time.sleep(150)
+            time.sleep(10)
             
 
             # Arrêter les processus

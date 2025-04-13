@@ -4,7 +4,7 @@ FROM python:3.9-slim
 RUN apt-get update && apt-get install -y curl
 
 # Installer pip requirements
-COPY requirements.txt .
+COPY requirements_deployement.txt .
 RUN pip install --no-cache-dir -r requirements_deployement.txt
 
 # Copier l'app

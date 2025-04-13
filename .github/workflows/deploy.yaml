@@ -35,7 +35,7 @@ jobs:
           -v ${{ github.workspace }}/mlruns:/mlflow/mlruns \
           ghcr.io/mlflow/mlflow:latest \
           mlflow server \
-          --backend-store-uri sqlite:///mlflow.db \
+          --backend-store-uri sqlite:/mlflow/mlruns  \
           --default-artifact-root /mlflow/mlruns \
           --host 0.0.0.0
 

@@ -1,26 +1,44 @@
-name: Deploy FastAPI and MLflow
+name: Continuous Deployment
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["ML Pipeline"]  # Nom du workflow CI
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker
-      uses: docker/setup-buildx-action@v3
+      - name: Download model artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: ml_pipeline.yml
+          workflow_conclusion: success
+          run_id: ${{ github.event.workflow_run.id }}
+          name: model-artifacts
+          path: ./models
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          check_artifacts: true
 
-    - name: Build and push Docker images
-      run: |
-        docker build -t fastapi-model -f docker/fastapi.Dockerfile .
-        docker build -t mlflow-ui -f docker/mlflow.Dockerfile .
+      - name: Setup Docker
+        uses: docker/setup-buildx-action@v3
 
-    - name: Run services with Docker Compose
-      run: docker-compose -f docker/docker-compose.yml up -d
+      - name: Build and run services with Docker Compose
+        run: docker compose -f docker/docker-compose.yml up --build -d
+
+      - name: Wait for services to be ready
+        run: sleep 30
+
+      - name: List running containers
+        run: docker ps
+

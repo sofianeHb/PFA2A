@@ -2,8 +2,11 @@ FROM python:3.9
 
 RUN pip install mlflow
 
-# Affiche seulement 2 niveaux de l'arborescence
-RUN find . -maxdepth 4
+# Affiche le répertoire courant
+RUN pwd
+
+# Affiche seulement 2 niveaux de l'arborescence à partir du répertoire courant
+RUN find . -maxdepth 2
 
 EXPOSE 5000
 

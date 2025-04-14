@@ -4,9 +4,9 @@ WORKDIR /app
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN pwd
 COPY ./app /app
-
+RUN pwd
 # Affiche seulement 2 niveaux de l'arborescence
 RUN find . -maxdepth 4
 

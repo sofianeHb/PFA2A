@@ -47,7 +47,15 @@ jobs:
         sudo apt-get install -y docker-compose
 
     - name: Build and run containers
-      run: docker-compose up -d --build
+      run: |
+        docker-compose up -d --build
+        sleep 10
+
+    - name: Show FastAPI container logs
+      run: |
+          echo "Checking FastAPI container logs..."
+          docker ps
+          docker logs $(docker ps -q --filter name=fastapi)
 
     - name: Download and set up Ngrok
       run: |

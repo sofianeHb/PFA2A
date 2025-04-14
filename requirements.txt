@@ -30,3 +30,4 @@ tensorflow-estimator==2.10.0
 tensorflow-io-gcs-filesystem==0.31.0
 fastapi
 uvicorn
+python-multipart

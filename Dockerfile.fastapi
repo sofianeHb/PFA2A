@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pwd
 COPY . /app
 RUN pwd
-RUN cd app
+RUN cd app/app
 RUN pwd
 # Affiche seulement 2 niveaux de l'arborescence
 RUN find . -maxdepth 2

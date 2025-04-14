@@ -7,9 +7,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pwd
 COPY . /app
 RUN pwd
-RUN cd app/app
+RUN find . -maxdepth 2
+WORKDIR /app/app
 RUN pwd
 # Affiche seulement 2 niveaux de l'arborescence
-RUN find . -maxdepth 2
+
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -3,7 +3,7 @@ FROM python:3.9
 RUN pip install mlflow
 
 # Affiche seulement 2 niveaux de l'arborescence
-RUN find /app -maxdepth 2
+RUN find . -maxdepth 2
 
 EXPOSE 5000
 

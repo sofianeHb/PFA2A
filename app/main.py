@@ -6,12 +6,6 @@ from model.pneumonia_model import predict
 
 app = FastAPI()
 
-# Endpoint pour vérifier que le serveur est actif
-@app.get("/")
-async def root():
-    return {"message": "FastAPI is running "}
-
-# Endpoint pour prédire la pneumonie
 @app.post("/predict/")
 async def predict_pneumonia(file: UploadFile = File(...)):
     try:

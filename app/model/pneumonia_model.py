@@ -28,7 +28,7 @@ model= build_custom_model(
         plot_file="model_plot.png",
         show_summary=False
 )
-model.load_weights("./outputs/models/Enhanced_model_V2.keras")
+model.load_weights("../outputs/models/Enhanced_model_V2.keras")
 
 # Charger le mapping des classes
 with open("model/class_mapping.json", "r") as f:

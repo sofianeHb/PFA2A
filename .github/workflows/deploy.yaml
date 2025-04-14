@@ -5,6 +5,10 @@ on:
     workflows: ["ML Pipeline"]
     types:
       - completed
+#Permission to download from another workflow
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   deploy:
@@ -18,14 +22,22 @@ jobs:
     - name: Download mlruns from previous workflow
       uses: actions/download-artifact@v4
       with:
+        workflow: ml_pipeline.yml
+        workflow_conclusion: success
+        run_id: ${{ github.event.workflow_run.id }}
         name: mlruns
         path: mlruns/
+        check_artifacts: true
 
     - name: Download outputs from previous workflow
       uses: actions/download-artifact@v4
       with:
+        workflow: ml_pipeline.yml
+        workflow_conclusion: success
+        run_id: ${{ github.event.workflow_run.id }}
         name: outputs
         path: outputs/
+        check_artifacts: true
 
     - name: Install Docker Compose
       run: |

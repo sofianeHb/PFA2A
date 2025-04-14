@@ -2,6 +2,7 @@ FROM python:3.9
 
 RUN pip install mlflow
 
+COPY . /app
 # Affiche le répertoire courant
 RUN pwd
 

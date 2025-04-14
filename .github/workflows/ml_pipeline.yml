@@ -115,7 +115,7 @@ jobs:
         "
 
     - name: Archive artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: model-artifacts
         path: |
@@ -125,19 +125,19 @@ jobs:
           **/*.keras
 
     - name: Upload MLflow logs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: mlruns
         path: mlruns/
 
     - name: Upload Data directory
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: data
         path: data/
 
     - name: Upload Outputs directory
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: outputs
         path: outputs/

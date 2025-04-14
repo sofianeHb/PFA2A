@@ -5,7 +5,7 @@ on:
     workflows: ["ML Pipeline"]
     types:
       - completed
-
+#Permission to download from another workflow
 permissions:
   actions: read
   contents: read
@@ -16,60 +16,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
+    - name: Download mlruns from previous workflow
+      uses: actions/download-artifact@v4
+      with:
+        workflow: ml_pipeline.yml
+        workflow_conclusion: success
+        run_id: ${{ github.event.workflow_run.id }}
+        name: mlruns
+        path: mlruns/
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        check_artifacts: true
 
-      - name: Get latest successful run ID of ML Pipeline
-        id: get_run
-        run: |
-          run_id=$(gh run list --workflow="ML Pipeline" --limit=1 --json databaseId,status,conclusion -q '.[0].databaseId')
-          echo "run_id=$run_id" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Download outputs from previous workflow
+      uses: actions/download-artifact@v4
+      with:
+        workflow: ml_pipeline.yml
+        workflow_conclusion: success
+        run_id: ${{ github.event.workflow_run.id }}
+        name: outputs
+        path: outputs/
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        check_artifacts: true
 
-      - name: Download mlruns artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: mlruns
-          path: mlruns/
-          run-id: ${{ steps.get_run.outputs.run_id }}
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
 
-      - name: Download outputs artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: outputs
-          path: outputs/
-          run-id: ${{ steps.get_run.outputs.run_id }}
+    - name: Build and run containers
+      run: docker-compose up -d --build
 
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+    - name: Download and set up Ngrok
+      run: |
+        wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+        unzip ngrok-stable-linux-amd64.zip
+        sudo mv ngrok /usr/local/bin
+        ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
 
-      - name: Build and run containers
-        run: docker-compose up -d --build
+    - name: Start Ngrok tunnels
+      run: |
+        nohup ngrok http 8000 > ngrok_fastapi.log &
+        nohup ngrok http 5000 > ngrok_mlflow.log &
+        sleep 10
 
-      - name: Download and set up Ngrok
-        run: |
-          wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
-          unzip ngrok-stable-linux-amd64.zip
-          sudo mv ngrok /usr/local/bin
-          ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-
-      - name: Start Ngrok tunnels
-        run: |
-          nohup ngrok http 8000 > ngrok_fastapi.log &
-          nohup ngrok http 5000 > ngrok_mlflow.log &
-          sleep 10
-
-      - name: Show public URLs
-        run: |
-          curl http://localhost:4040/api/tunnels > tunnels.json
-          echo "Public URLs:"
-          cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
-          sleep 100
+    - name: Show public URLs
+      run: |
+        curl http://localhost:4040/api/tunnels > tunnels.json
+        echo "Public URLs:"
+        cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
+        sleep 100

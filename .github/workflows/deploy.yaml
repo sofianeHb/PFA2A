@@ -15,6 +15,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Download mlruns from previous workflow
+      uses: actions/download-artifact@v4
+      with:
+        name: mlruns
+        path: mlruns/
+
+    - name: Download outputs from previous workflow
+      uses: actions/download-artifact@v4
+      with:
+        name: outputs
+        path: outputs/
+
     - name: Install Docker Compose
       run: |
         sudo apt-get update

@@ -57,6 +57,12 @@ jobs:
           docker ps
           docker logs $(docker ps -q --filter name=fastapi)
 
+    - name: Show FastAPI container logs
+      run: |
+              echo "Checking Mlflow container logs..."
+              docker ps
+              docker logs $(docker ps -q --filter name=mlflow)
+
     - name: Download and set up Ngrok
       run: |
         wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
@@ -75,4 +81,4 @@ jobs:
         curl http://localhost:4040/api/tunnels > tunnels.json
         echo "Public URLs:"
         cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
-        sleep 100
+        sleep 300

@@ -57,7 +57,7 @@ jobs:
           docker ps
           docker logs $(docker ps -q --filter name=fastapi)
 
-    - name: Show FastAPI container logs
+    - name: Show Mlfow container logs
       run: |
               echo "Checking Mlflow container logs..."
               docker ps

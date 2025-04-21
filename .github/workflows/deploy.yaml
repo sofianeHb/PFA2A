@@ -57,11 +57,6 @@ jobs:
           docker ps
           docker logs $(docker ps -q --filter name=fastapi)
 
-    - name: Show Mlfow container logs
-      run: |
-              echo "Checking Mlflow container logs..."
-              docker ps
-              docker logs $(docker ps -q --filter name=mlflow)
 
     - name: Download and set up Ngrok
       run: |

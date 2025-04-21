@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def plot_label_distributions(df, output_dir="./outputs/results"):
     os.makedirs(output_dir, exist_ok=True)
 
-    # 1. 🥧 Pie Chart: Label Proportion
+    # 1. Pie Chart: Label Proportion
     plt.figure(figsize=(6, 6))
     df["label"].value_counts(normalize=True).plot(
         kind="pie", autopct="%1.1f%%", textprops={'fontsize': 12},
@@ -25,7 +25,7 @@ def plot_label_distributions(df, output_dir="./outputs/results"):
     plt.savefig(pie_output_path)
     plt.close()
 
-    # 2. 📊 Bar Plot: Overall Label Distribution
+    # 2. Bar Plot: Overall Label Distribution
     plt.figure(figsize=(9, 6))
     ax2 = sns.countplot(x="label", data=df, edgecolor='black', linewidth=0.5)
     for p in ax2.patches:

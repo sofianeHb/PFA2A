@@ -57,6 +57,13 @@ jobs:
           docker ps
           docker logs $(docker ps -q --filter name=fastapi)
 
+    - name: Inspect MLflow container filesystem
+      run: |
+            echo "Répertoire courant dans le container MLflow :"
+            docker exec pfa2a_mlflow_1 pwd
+    
+            echo "Contenu du dossier mlflow (niveau 2):"
+            docker exec pfa2a_mlflow_1 ls -lah /mlflow
 
     - name: Download and set up Ngrok
       run: |

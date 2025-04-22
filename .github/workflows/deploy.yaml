@@ -63,7 +63,7 @@ jobs:
             docker exec pfa2a_mlflow_1 pwd
     
             echo "Contenu du dossier mlflow (niveau 2):"
-            docker exec pfa2a_mlflow_1 ls -lah /mlflow
+            docker exec pfa2a_mlflow_1 ls -lah 
 
     - name: Download and set up Ngrok
       run: |

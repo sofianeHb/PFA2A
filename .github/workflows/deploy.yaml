@@ -62,8 +62,8 @@ jobs:
             echo "Répertoire courant dans le container MLflow :"
             docker exec pfa2a_mlflow_1 pwd
     
-            echo "Contenu de /artifacts :"
-            docker exec pfa2a_mlflow_1 ls -lah /artifacts
+            echo "Contenu de /app :"
+            docker exec pfa2a_mlflow_1 ls -lah /app
 
     - name: Download and set up Ngrok
       run: |

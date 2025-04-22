@@ -19,4 +19,4 @@ services:
       - ./outputs:/artifacts/outputs
     environment:
       MLFLOW_TRACKING_URI: http://localhost:5000
-      MLFLOW_ARTIFACT_ROOT: /artifacts/output
+      MLFLOW_ARTIFACT_ROOT: /artifacts

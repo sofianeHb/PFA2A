@@ -63,7 +63,7 @@ jobs:
       run: |
         nohup ngrok http 8000 > ngrok_fastapi.log &
         nohup ngrok http 5000 > ngrok_mlflow.log &
-        nohup ngrok http 3000 > ngrok_grafana.log   
+        nohup ngrok http 3000 > ngrok_grafana.log &   
 
     - name: Show public URLs
       run: |

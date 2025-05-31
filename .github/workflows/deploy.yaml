@@ -65,12 +65,16 @@ jobs:
         nohup ngrok http 5000 > ngrok_mlflow.log &
         nohup ngrok http 3000 > ngrok_grafana.log &   
 
-    - name: Show public URLs
+    - name: Show Ngrok URLs from logs
       run: |
-        curl http://localhost:4040/api/tunnels > tunnels.json
-        echo "Public URLs:"
-        cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
+        echo "FastAPI URL:"
+        grep -o 'https://[0-9a-z]*\.ngrok\.io' ngrok_fastapi.log | head -1
+        echo "MLflow URL:"
+        grep -o 'https://[0-9a-z]*\.ngrok\.io' ngrok_mlflow.log | head -1
+        echo "Grafana URL:"
+        grep -o 'https://[0-9a-z]*\.ngrok\.io' ngrok_grafana.log | head -1
+
 
     - name: Wait
       run: |
-        sleep 500
+        sleep 60

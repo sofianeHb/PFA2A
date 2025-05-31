@@ -51,19 +51,6 @@ jobs:
         docker-compose up -d --build
         sleep 10
 
-    - name: Show FastAPI container logs
-      run: |
-          echo "Checking FastAPI container logs..."
-          docker ps
-          docker logs $(docker ps -q --filter name=fastapi)
-
-    - name: Inspect MLflow container filesystem
-      run: |
-            echo "Répertoire courant dans le container MLflow :"
-            docker exec pfa2a_mlflow_1 pwd
-    
-            echo "Contenu de /app :"
-            docker exec pfa2a_mlflow_1 ls -lah /app
 
     - name: Download and set up Ngrok
       run: |
@@ -83,4 +70,7 @@ jobs:
         curl http://localhost:4040/api/tunnels > tunnels.json
         echo "Public URLs:"
         cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
-        sleep 300
+
+    - name: Wait
+      run: |
+        sleep 500

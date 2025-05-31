@@ -19,21 +19,17 @@ jobs:
       with:
         python-version: '3.9.20'
       
-    - name: Install Graphviz
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y graphviz
 
     - name: Install DVC and dependencies
       run: |
+        sudo apt-get update
+        sudo apt-get install -y graphviz
         python -m pip install --upgrade pip
         pip uninstall -y protobuf
         pip install protobuf==3.19.6 --no-cache-dir
         pip install -r requirements.txt
         python -c "import google.protobuf; print('protobuf version:', google.protobuf.__version__)"
     
-    - name: Pull data from DVC remote (if needed)
-      run: dvc pull || echo "Pas de remote configuré pour DVC."
 
     - name: Run data preprocessing
       run: |
@@ -78,12 +74,6 @@ jobs:
         else:
             print('Modèle validé !')
         "
-
-    - name: Afficher l'arborescence du répertoire
-      run: |
-        sudo apt-get install -y tree
-        echo "Arborescence du répertoire courant :"
-        tree -L 2
 
     - name: Set up Ngrok and Run MLflow UI
       env:

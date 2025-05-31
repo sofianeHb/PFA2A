@@ -176,7 +176,7 @@ def main():
     parser.add_argument("--output_model", type=str, default="./outputs/models/Enhanced_model_V2.keras", help="Path to save the model")
     parser.add_argument("--output_plot", type=str, default="./outputs/results/training_history.png", help="Path to save the training curve")
     parser.add_argument("--output_model_plot", type=str, default="./outputs/results/model_plot.png", help="Path to save the model plot") # ..
-    parser.add_argument("--epochs", type=float, default=7, help="epochs for training")
+    parser.add_argument("--epochs", type=float, default=1, help="epochs for training")
     parser.add_argument("--learning_rate", type=float, default=0.0001, help="Learning rate for training")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
     parser.add_argument("--image_height", type=int, default=224, help="Height of input images")

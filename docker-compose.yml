@@ -6,8 +6,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.fastapi
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     volumes:
       - ./logs:/app/logs
     networks:
@@ -23,8 +23,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.mlflow
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     volumes:
       - ./mlruns:/mlflow/mlruns
       - ./outputs:/artifacts/outputs
@@ -44,8 +44,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    ports:
-      - "3000:80"
+    expose:
+      - "80"
     networks:
       - app-network
     depends_on:
@@ -59,8 +59,6 @@ services:
       dockerfile: Dockerfile.nginx
     ports:
       - "80:80"
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html
     networks:
       - app-network
     depends_on:

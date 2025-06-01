@@ -22,6 +22,9 @@ logger.setLevel(logging.INFO)
 handler = logging.FileHandler("logs/predictions.log")
 handler.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(handler)
+with open("logs/predictions.log", "a") as f:
+    f.write("")  # crée le fichier s'il n'existe pas
+
 
 @app.post("/predict/")
 async def predict_pneumonia(file: UploadFile = File(...)):
@@ -38,9 +41,12 @@ async def predict_pneumonia(file: UploadFile = File(...)):
             "prediction": prediction,
             "duration": duration
         }
+        print("Prediction logged:", log_entry)  # pour être sûr que le code passe ici
         logger.info(json.dumps(log_entry))
 
         return JSONResponse(content=prediction)
     except Exception as e:
+        print("Logging error:", str(e))
+
         logger.error(json.dumps({"timestamp": datetime.utcnow().isoformat(), "error": str(e)}))
         return JSONResponse(status_code=500, content={"error": str(e)})

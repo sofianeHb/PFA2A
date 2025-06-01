@@ -58,37 +58,8 @@ jobs:
     - name: Build and run containers
       run: |
         docker-compose up -d --build
-        sleep 30
+        sleep 10
 
-    - name: Wait for services to be healthy
-      run: |
-        echo "Waiting for services to start..."
-        for i in {1..10}; do
-          if curl -f http://localhost > /dev/null 2>&1; then
-            echo "✅ Nginx is ready"
-            break
-          fi
-          echo "⏳ Waiting for Nginx... ($i/10)"
-          sleep 10
-        done
-        
-        for i in {1..10}; do
-          if curl -f http://localhost/api/docs > /dev/null 2>&1; then
-            echo "✅ FastAPI is ready"
-            break
-          fi
-          echo "⏳ Waiting for FastAPI... ($i/10)"
-          sleep 10
-        done
-
-        for i in {1..10}; do
-          if curl -f http://localhost/mlflow > /dev/null 2>&1; then
-            echo "✅ MLflow is ready"
-            break
-          fi
-          echo "⏳ Waiting for MLflow... ($i/10)"
-          sleep 10
-        done
 
     - name: Download and set up Ngrok
       run: |
@@ -102,7 +73,7 @@ jobs:
         nohup ngrok http 80 --log stdout > ngrok_main.log &
         nohup ngrok http 8000 --log stdout > ngrok_fastapi.log &
         nohup ngrok http 5000 --log stdout > ngrok_mlflow.log &
-        sleep 15
+        sleep 10
 
     - name: Show public URLs
       run: |
@@ -117,35 +88,18 @@ jobs:
         sleep 200
 
 
-    - name: Check container logs
-      run: |
-        echo "📋 Container Status:"
-        docker-compose ps
-        
-        echo "📋 Nginx Logs:"
-        docker-compose logs nginx | tail -20
-        
-        echo "📋 FastAPI Logs:"
-        docker-compose logs fastapi | tail -20
-        
-        echo "📋 MLflow Logs:"
-        docker-compose logs mlflow | tail -20
-        
-        echo "📋 Frontend Logs:"
-        docker-compose logs frontend | tail -20
-
     - name: Check logs inside FastAPI container
       run: |
         CONTAINER_ID=$(docker ps -qf "name=fastapi")
-        echo "📝 FastAPI container ID: $CONTAINER_ID"
+        echo "FastAPI container ID: $CONTAINER_ID"
         docker exec $CONTAINER_ID cat /app/logs/predictions.log || echo "No log file inside container yet"
 
     - name: Check logs directory and file content
       run: |
-        echo "📁 Content of logs directory:"
+        echo "Content of logs directory:"
         ls -la ./logs/ || echo "Logs directory doesn't exist"
         
-        echo "📄 Content of predictions.log:"
+        echo "Content of predictions.log:"
         if [ -f ./logs/predictions.log ]; then
           head -n 20 ./logs/predictions.log
         else

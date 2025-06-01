@@ -170,10 +170,10 @@ function App() {
       </main>
 
       <footer className="App-footer">
-        <p>⚠️ Cet outil est à des fins éducatives uniquement et ne remplace pas un diagnostic médical professionnel.</p>
+        <p>© 2025 PneumoScan – Intelligent Pneumonia Detection Interface</p>
         <div className="footer-links">
           <a href="/mlflow" target="_blank" rel="noopener noreferrer">
-            📊 MLflow Dashboard
+            All rights reserved
           </a>
         </div>
       </footer>

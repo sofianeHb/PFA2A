@@ -1,42 +1,46 @@
+# main.py
+
+import logging
+import time
+from datetime import datetime
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from PIL import Image
 import io
-import logging
-import json
-from datetime import datetime
 from model.pneumonia_model import predict
+import os
+import json
 
 app = FastAPI()
 
-# Logger JSON structuré
-logger = logging.getLogger("inference_logger")
+# Crée le dossier logs s'il n'existe pas
+os.makedirs("logs", exist_ok=True)
+
+# Configure le logger pour écrire dans un fichier en mode append
+logger = logging.getLogger("predictions_logger")
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(message)s')  # ligne brute pour Loki
-handler.setFormatter(formatter)
+handler = logging.FileHandler("logs/predictions.log")
+handler.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(handler)
 
 @app.post("/predict/")
 async def predict_pneumonia(file: UploadFile = File(...)):
+    start_time = time.time()
     try:
         contents = await file.read()
         img = Image.open(io.BytesIO(contents)).convert("RGB")
         prediction = predict(img)
+        duration = time.time() - start_time
 
-        # Log structuré : timestamp, nom de fichier, prédiction
-        logger.info(json.dumps({
+        log_entry = {
             "timestamp": datetime.utcnow().isoformat(),
             "filename": file.filename,
             "prediction": prediction,
-            "model": "Enhanced_model_V2.keras"
-        }))
+            "duration": duration
+        }
+        logger.info(json.dumps(log_entry))
 
         return JSONResponse(content=prediction)
     except Exception as e:
-        logger.error(json.dumps({
-            "timestamp": datetime.utcnow().isoformat(),
-            "filename": file.filename if file else "unknown",
-            "error": str(e)
-        }))
+        logger.error(json.dumps({"timestamp": datetime.utcnow().isoformat(), "error": str(e)}))
         return JSONResponse(status_code=500, content={"error": str(e)})

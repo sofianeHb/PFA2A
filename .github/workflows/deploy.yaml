@@ -63,18 +63,25 @@ jobs:
       run: |
         nohup ngrok http 8000 > ngrok_fastapi.log &
         nohup ngrok http 5000 > ngrok_mlflow.log &
-        nohup ngrok http 3000 > ngrok_grafana.log &   
+        sleep 10
 
-    - name: Show Ngrok URLs from logs
+    - name: Show public URLs
       run: |
-        echo "FastAPI URL:"
-        grep -o 'https://[0-9a-z]*\.ngrok\.io' ngrok_fastapi.log | head -1
-        echo "MLflow URL:"
-        grep -o 'https://[0-9a-z]*\.ngrok\.io' ngrok_mlflow.log | head -1
-        echo "Grafana URL:"
-        grep -o 'https://[0-9a-z]*\.ngrok\.io' ngrok_grafana.log | head -1
+        curl http://localhost:4040/api/tunnels > tunnels.json
+        echo "Public URLs:"
+        cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
+        sleep 150s
 
-
-    - name: Wait
+    - name: Check logs directory and file content
       run: |
-        sleep 60
+        ls
+        echo "Listing ./logs directory contents:"
+        ls -lah ./logs || echo "Le dossier ./logs n'existe pas ou est vide"
+
+        echo "Content of predictions.log:"
+        if [ -f ./logs/predictions.log ]; then
+          head -n 20 ./logs/predictions.log
+        else
+          echo "Le fichier predictions.log n'existe pas."
+        fi
+

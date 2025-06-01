@@ -76,17 +76,12 @@ jobs:
       run: |
         CONTAINER_ID=$(docker ps -qf "name=fastapi")
         echo "FastAPI container ID: $CONTAINER_ID"
-        docker exec $CONTAINER_ID ls -lah /app/logs
         docker exec $CONTAINER_ID cat /app/logs/predictions.log || echo "No log file inside container"
         
 
 
     - name: Check logs directory and file content
       run: |
-        ls
-        echo "Listing ./logs directory contents:"
-        ls -lah ./logs || echo "Le dossier ./logs n'existe pas ou est vide"
-
         echo "Content of predictions.log:"
         if [ -f ./logs/predictions.log ]; then
           head -n 20 ./logs/predictions.log

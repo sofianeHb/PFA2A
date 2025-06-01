@@ -14,15 +14,17 @@ import json
 app = FastAPI()
 
 # Crée le dossier logs s'il n'existe pas
-os.makedirs("logs", exist_ok=True)
+LOG_DIR = "/app/logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+log_file_path = os.path.join(LOG_DIR, "predictions.log")
 
 # Configure le logger pour écrire dans un fichier en mode append
 logger = logging.getLogger("predictions_logger")
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler("logs/predictions.log")
+handler = logging.FileHandler(log_file_path)
 handler.setFormatter(logging.Formatter('%(message)s'))
 logger.addHandler(handler)
-with open("logs/predictions.log", "a") as f:
+with open(log_file_path, "a") as f:
     f.write("")  # crée le fichier s'il n'existe pas
 
 

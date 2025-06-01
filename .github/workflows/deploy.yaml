@@ -78,7 +78,7 @@ jobs:
         echo "FastAPI container ID: $CONTAINER_ID"
         docker exec $CONTAINER_ID ls -lah /app/logs
         docker exec $CONTAINER_ID cat /app/logs/predictions.log || echo "No log file inside container"
-        docker exec $CONTAINER_ID ls -lah /app/app/logs
+        
 
 
     - name: Check logs directory and file content

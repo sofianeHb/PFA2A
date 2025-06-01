@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # Backend FastAPI
   fastapi:
     build:
       context: .
@@ -9,7 +10,15 @@ services:
       - "8000:8000"
     volumes:
       - ./logs:/app/logs
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # MLflow
   mlflow:
     build:
       context: .
@@ -22,3 +31,53 @@ services:
     environment:
       MLFLOW_TRACKING_URI: http://localhost:5000
       MLFLOW_ARTIFACT_ROOT: /artifacts
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+    depends_on:
+      - fastapi
+      - mlflow
+
+  # Nginx Reverse Proxy
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+    networks:
+      - app-network
+    depends_on:
+      - fastapi
+      - mlflow
+      - frontend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  logs:
+  mlruns:
+  outputs:

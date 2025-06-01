@@ -46,11 +46,49 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-compose
 
+    - name: Create necessary directories
+      run: |
+        mkdir -p logs
+        mkdir -p nginx
+        mkdir -p frontend/src
+        touch frontend/package.json
+        touch frontend/vite.config.js
+        touch frontend/index.html
+
     - name: Build and run containers
       run: |
         docker-compose up -d --build
-        sleep 10
+        sleep 30
 
+    - name: Wait for services to be healthy
+      run: |
+        echo "Waiting for services to start..."
+        for i in {1..10}; do
+          if curl -f http://localhost > /dev/null 2>&1; then
+            echo "✅ Nginx is ready"
+            break
+          fi
+          echo "⏳ Waiting for Nginx... ($i/10)"
+          sleep 10
+        done
+        
+        for i in {1..10}; do
+          if curl -f http://localhost/api/docs > /dev/null 2>&1; then
+            echo "✅ FastAPI is ready"
+            break
+          fi
+          echo "⏳ Waiting for FastAPI... ($i/10)"
+          sleep 10
+        done
+
+        for i in {1..10}; do
+          if curl -f http://localhost/mlflow > /dev/null 2>&1; then
+            echo "✅ MLflow is ready"
+            break
+          fi
+          echo "⏳ Waiting for MLflow... ($i/10)"
+          sleep 10
+        done
 
     - name: Download and set up Ngrok
       run: |
@@ -61,31 +99,55 @@ jobs:
 
     - name: Start Ngrok tunnels
       run: |
-        nohup ngrok http 8000 > ngrok_fastapi.log &
-        nohup ngrok http 5000 > ngrok_mlflow.log &
-        sleep 10
+        nohup ngrok http 80 --log stdout > ngrok_main.log &
+        nohup ngrok http 8000 --log stdout > ngrok_fastapi.log &
+        nohup ngrok http 5000 --log stdout > ngrok_mlflow.log &
+        sleep 15
 
     - name: Show public URLs
       run: |
         curl http://localhost:4040/api/tunnels > tunnels.json
-        echo "Public URLs:"
-        cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
-        sleep 150s
+        echo "🌐 Public URLs:"
+        echo "================================"
+        cat tunnels.json | jq -r '.tunnels[] | "📱 " + .name + ": " + .public_url'
+        echo "================================"
+        echo "🏠 Main App (Nginx): $(cat tunnels.json | jq -r '.tunnels[] | select(.config.addr=="localhost:80") | .public_url')"
+        echo "🔧 FastAPI Direct: $(cat tunnels.json | jq -r '.tunnels[] | select(.config.addr=="localhost:8000") | .public_url')"
+        echo "📊 MLflow Direct: $(cat tunnels.json | jq -r '.tunnels[] | select(.config.addr=="localhost:5000") | .public_url')"
+        sleep 200
+
+
+    - name: Check container logs
+      run: |
+        echo "📋 Container Status:"
+        docker-compose ps
+        
+        echo "📋 Nginx Logs:"
+        docker-compose logs nginx | tail -20
+        
+        echo "📋 FastAPI Logs:"
+        docker-compose logs fastapi | tail -20
+        
+        echo "📋 MLflow Logs:"
+        docker-compose logs mlflow | tail -20
+        
+        echo "📋 Frontend Logs:"
+        docker-compose logs frontend | tail -20
 
     - name: Check logs inside FastAPI container
       run: |
         CONTAINER_ID=$(docker ps -qf "name=fastapi")
-        echo "FastAPI container ID: $CONTAINER_ID"
-        docker exec $CONTAINER_ID cat /app/logs/predictions.log || echo "No log file inside container"
-        
-
+        echo "📝 FastAPI container ID: $CONTAINER_ID"
+        docker exec $CONTAINER_ID cat /app/logs/predictions.log || echo "No log file inside container yet"
 
     - name: Check logs directory and file content
       run: |
-        echo "Content of predictions.log:"
+        echo "📁 Content of logs directory:"
+        ls -la ./logs/ || echo "Logs directory doesn't exist"
+        
+        echo "📄 Content of predictions.log:"
         if [ -f ./logs/predictions.log ]; then
           head -n 20 ./logs/predictions.log
         else
-          echo "Le fichier predictions.log n'existe pas."
+          echo "Le fichier predictions.log n'existe pas encore."
         fi
-

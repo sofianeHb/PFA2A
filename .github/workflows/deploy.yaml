@@ -72,6 +72,14 @@ jobs:
         cat tunnels.json | jq -r '.tunnels[] | .name + ": " + .public_url'
         sleep 150s
 
+    - name: Check logs inside FastAPI container
+      run: |
+        CONTAINER_ID=$(docker ps -qf "name=fastapi")
+        echo "FastAPI container ID: $CONTAINER_ID"
+        docker exec $CONTAINER_ID ls -lah /app/logs
+        docker exec $CONTAINER_ID cat /app/logs/predictions.log || echo "No log file inside container"
+
+
     - name: Check logs directory and file content
       run: |
         ls
